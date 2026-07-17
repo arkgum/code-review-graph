@@ -27,6 +27,16 @@ limitless_arkgum/
     │   ├── Storage/            LifelogStore, GRDBLifelogStore, SyncState
     │   └── Sync/               SyncManager, SyncBackend
     └── Tests/LimitlessKitTests/
+
+LimitlessApp/                   iOS-приложение (SwiftUI) — собирается в Xcode
+├── LimitlessApp.swift          @main точка входа
+├── AppEnvironment.swift        composition root (стор + клиент + синхра)
+├── ViewModels/                 LifelogListViewModel
+├── Views/                      список, деталь (таймлайн спикеров), настройки
+├── Security/                   KeychainAPIKeyProvider (ключ только в Keychain)
+├── Support/                    форматирование дат/длительностей
+├── Info.plist
+└── README-Xcode.md             как собрать проект в Xcode
 ```
 
 Дальше (по `PLAN.md`) добавляются слои `Storage/` (GRDB), `Sync/` (SyncManager) и iOS-таргет
@@ -41,8 +51,9 @@ limitless_arkgum/
       upsert-by-newer-updatedAt, флаг `synced`, sync-bookmark).
 - [x] Этап 3 — `SyncManager` (actor): инкрементальная дельта-синхра `start=lastSyncTime`,
       постраничный upsert, outbox на бэкенд; интеграционные тесты через `URLProtocol`-мок.
-- [ ] Этап 4 — iOS UI (SwiftUI).
-- [ ] Этап 5 — Keychain для API-ключа.
+- [x] Этап 4 — iOS UI (SwiftUI): список (pull-to-refresh, sync при `scenePhase`), деталь с
+      таймлайном спикеров, экран настроек. Сборка проекта — см. `LimitlessApp/README-Xcode.md`.
+- [x] Этап 5 — Keychain для API-ключа (`KeychainAPIKeyProvider`).
 - [ ] Этап 6 — Spring Boot приёмник + outbox.
 - [ ] Этап 7 — (опц.) аудио.
 
