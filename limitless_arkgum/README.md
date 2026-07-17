@@ -23,7 +23,9 @@ limitless_arkgum/
     ├── Package.swift
     ├── Sources/LimitlessKit/
     │   ├── Models/             Lifelog, ContentNode, LifelogsResponse
-    │   └── Networking/         LimitlessClient, LimitlessAPIError, APIKeyProvider
+    │   ├── Networking/         LimitlessClient, LimitlessAPIError, APIKeyProvider
+    │   ├── Storage/            LifelogStore, GRDBLifelogStore, SyncState
+    │   └── Sync/               SyncManager, SyncBackend
     └── Tests/LimitlessKitTests/
 ```
 
@@ -35,8 +37,10 @@ limitless_arkgum/
 - [x] Этап 0 — каркас, план.
 - [x] Этап 1 — ядро API-клиента: модели, `LimitlessClient` (пагинация по курсору, backoff на 429,
       толерантное декодирование дат), unit-тесты декодинга.
-- [ ] Этап 2 — хранилище (GRDB + миграции).
-- [ ] Этап 3 — `SyncManager` (инкрементальная дельта-синхра).
+- [x] Этап 2 — хранилище: `LifelogStore` (протокол) + `GRDBLifelogStore` (SQLite/WAL, миграция,
+      upsert-by-newer-updatedAt, флаг `synced`, sync-bookmark).
+- [x] Этап 3 — `SyncManager` (actor): инкрементальная дельта-синхра `start=lastSyncTime`,
+      постраничный upsert, outbox на бэкенд; интеграционные тесты через `URLProtocol`-мок.
 - [ ] Этап 4 — iOS UI (SwiftUI).
 - [ ] Этап 5 — Keychain для API-ключа.
 - [ ] Этап 6 — Spring Boot приёмник + outbox.
