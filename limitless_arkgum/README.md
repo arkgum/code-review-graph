@@ -37,6 +37,15 @@ LimitlessApp/                   iOS-приложение (SwiftUI) — соби�
 ├── Support/                    форматирование дат/длительностей
 ├── Info.plist
 └── README-Xcode.md             как собрать проект в Xcode
+
+backend/                        Spring Boot приёмник (Maven, Java 17)
+├── pom.xml
+├── src/main/java/ai/limitless/arkgum/
+│   ├── lifelog/                Entity, Repository, Controller (bulk upsert), DTO
+│   └── security/               SyncTokenFilter (X-Sync-Token)
+├── src/main/resources/         application.yml (H2 dev / Postgres prod)
+├── src/test/java/…             LifelogControllerTest
+└── README.md
 ```
 
 Дальше (по `PLAN.md`) добавляются слои `Storage/` (GRDB), `Sync/` (SyncManager) и iOS-таргет
@@ -54,7 +63,8 @@ LimitlessApp/                   iOS-приложение (SwiftUI) — соби�
 - [x] Этап 4 — iOS UI (SwiftUI): список (pull-to-refresh, sync при `scenePhase`), деталь с
       таймлайном спикеров, экран настроек. Сборка проекта — см. `LimitlessApp/README-Xcode.md`.
 - [x] Этап 5 — Keychain для API-ключа (`KeychainAPIKeyProvider`).
-- [ ] Этап 6 — Spring Boot приёмник + outbox.
+- [x] Этап 6 — Spring Boot приёмник (`backend/`) + клиент `HTTPSyncBackend`, настройки бэкенда
+      в приложении, outbox уходит на сервер (bulk-upsert по `id`, токен в `X-Sync-Token`).
 - [ ] Этап 7 — (опц.) аудио.
 
 ## Сборка

@@ -6,6 +6,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var keyInput = ""
+    @State private var backendURL = ""
+    @State private var backendToken = ""
     @State private var savedConfirmation = false
 
     var body: some View {
@@ -34,6 +36,24 @@ struct SettingsView: View {
                             .foregroundStyle(.green)
                     }
                 }
+
+                Section {
+                    TextField("https://your-backend", text: $backendURL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                    SecureField("Sync token", text: $backendToken)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Save backend") { saveBackend() }
+                    if env.backendConfig.current != nil {
+                        Button("Disable backend sync", role: .destructive) { clearBackend() }
+                    }
+                } header: {
+                    Text("Backend (optional)")
+                } footer: {
+                    Text("Where synced lifelogs are pushed (your Spring Boot server). Leave empty to keep data on-device only. Changes take effect after restarting the app.")
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -43,7 +63,10 @@ struct SettingsView: View {
                 }
             }
             .alert("Saved", isPresented: $savedConfirmation) {
-                Button("OK", role: .cancel) { dismiss() }
+                Button("OK", role: .cancel) {}
+            }
+            .onAppear {
+                backendURL = env.backendConfig.urlString
             }
         }
     }
@@ -59,5 +82,17 @@ struct SettingsView: View {
     private func clear() {
         env.keyProvider.clear()
         env.refreshKeyState()
+    }
+
+    private func saveBackend() {
+        env.backendConfig.save(urlString: backendURL, token: backendToken)
+        backendToken = ""
+        savedConfirmation = true
+    }
+
+    private func clearBackend() {
+        env.backendConfig.clear()
+        backendURL = ""
+        backendToken = ""
     }
 }

@@ -6,6 +6,7 @@ import LimitlessKit
 @MainActor
 final class AppEnvironment: ObservableObject {
     let keyProvider: KeychainAPIKeyProvider
+    let backendConfig: BackendConfigStore
     let store: LifelogStore
     let syncManager: SyncManager
 
@@ -19,18 +20,24 @@ final class AppEnvironment: ObservableObject {
         self.keyProvider = keyProvider
         self.hasAPIKey = keyProvider.hasKey
 
+        let backendConfig = BackendConfigStore()
+        self.backendConfig = backendConfig
+
         let client = LimitlessClient(keyProvider: keyProvider)
+        // Enable the outbox only when a backend URL + token are configured (stage 6).
+        let backend: SyncBackend? = backendConfig.current.map {
+            HTTPSyncBackend(baseURL: $0.baseURL, token: $0.token)
+        }
 
         do {
             let store = try GRDBLifelogStore(path: Self.databasePath())
             self.store = store
-            // No backend wired yet (stage 6). Sync pulls into the local store only.
-            self.syncManager = SyncManager(client: client, store: store, backend: nil)
+            self.syncManager = SyncManager(client: client, store: store, backend: backend)
         } catch {
             // Fall back to an ephemeral in-memory DB so the app still launches and shows the error.
             let fallback = try! GRDBLifelogStore(path: ":memory:")
             self.store = fallback
-            self.syncManager = SyncManager(client: client, store: fallback, backend: nil)
+            self.syncManager = SyncManager(client: client, store: fallback, backend: backend)
             self.startupError = "Failed to open local database: \(error.localizedDescription)"
         }
     }

@@ -1,0 +1,35 @@
+# Default profile: in-memory H2, convenient for local dev.
+spring:
+  datasource:
+    url: jdbc:h2:mem:lifelogs;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  jackson:
+    # Emit ISO-8601 strings, not epoch numbers, matching the iOS client's encoding.
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+
+# Shared secret the iOS app must send in X-Sync-Token. Provide via env var SYNC_TOKEN.
+sync:
+  token: ${SYNC_TOKEN:}
+
+---
+# Production profile: PostgreSQL. Activate with SPRING_PROFILES_ACTIVE=prod.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${JDBC_DATABASE_URL}
+    username: ${JDBC_DATABASE_USERNAME}
+    password: ${JDBC_DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
