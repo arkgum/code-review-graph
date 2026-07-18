@@ -100,7 +100,17 @@ Limitless Cloud API  ──GET /v1/lifelogs?start=…&cursor=…──▶  iOS-�
 - [x] **5. Keychain** — безопасное хранение ключа (`KeychainAPIKeyProvider`).
 - [x] **6. Spring Boot приёмник** — `POST /api/lifelogs` bulk-upsert + JPA + токен-фильтр;
       клиент `HTTPSyncBackend` + настройки бэкенда в приложении.
-- [ ] **7. (Опц.) Аудио** — выгрузка Ogg Opus по диапазону времени, локальное хранение. ← дальше
+- [x] **7. (Опц.) Аудио** — `downloadAudio(start:end:)` (≤2ч), `FileAudioStore`, `AudioService`;
+      загрузка + экспорт (`ShareLink`) + очистка кэша. Воспроизведение в приложении — follow-up
+      (см. оговорку про Opus ниже).
+
+### Оговорка про воспроизведение аудио (Opus)
+
+Limitless отдаёт аудио как **Ogg Opus**. iOS-фреймворки (`AVAudioPlayer`/`AVPlayer`) **не умеют**
+декодировать Opus в контейнере Ogg (поддержка Opus в iOS есть только внутри CAF/MP4). Поэтому
+сейчас приложение **скачивает и экспортирует** `.ogg` (через `ShareLink`), а встроенный плеер —
+осознанный follow-up. Варианты его сделать: (а) подключить Opus-декодер (libopus/libogg через
+SwiftPM или XCFramework), (б) транскодировать на бэкенде (ffmpeg → AAC/m4a) и играть уже m4a.
 
 ---
 

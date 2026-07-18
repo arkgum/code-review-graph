@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var backendURL = ""
     @State private var backendToken = ""
     @State private var savedConfirmation = false
+    @State private var audioRefresh = 0
 
     var body: some View {
         NavigationStack {
@@ -54,6 +55,20 @@ struct SettingsView: View {
                 } footer: {
                     Text("Where synced lifelogs are pushed (your Spring Boot server). Leave empty to keep data on-device only. Changes take effect after restarting the app.")
                 }
+
+                Section {
+                    HStack {
+                        Text("Downloaded audio")
+                        Spacer()
+                        Text(audioUsage).foregroundStyle(.secondary)
+                    }
+                    Button("Clear audio cache", role: .destructive) { clearAudio() }
+                        .disabled(env.audioStore.totalBytes() == 0)
+                } header: {
+                    Text("Storage")
+                } footer: {
+                    Text("Audio is stored as Ogg Opus. iOS can't play Ogg natively yet — export files to play them elsewhere.")
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -94,5 +109,16 @@ struct SettingsView: View {
         env.backendConfig.clear()
         backendURL = ""
         backendToken = ""
+    }
+
+    private var audioUsage: String {
+        _ = audioRefresh // re-evaluate after clearing
+        let bytes = env.audioStore.totalBytes()
+        return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+    }
+
+    private func clearAudio() {
+        try? env.audioStore.deleteAll()
+        audioRefresh += 1
     }
 }

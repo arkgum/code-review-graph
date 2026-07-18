@@ -9,6 +9,8 @@ final class AppEnvironment: ObservableObject {
     let backendConfig: BackendConfigStore
     let store: LifelogStore
     let syncManager: SyncManager
+    let audioService: AudioService
+    let audioStore: AudioStore
 
     /// Set when the store or environment failed to initialize; surfaced in the UI.
     @Published private(set) var startupError: String?
@@ -28,6 +30,13 @@ final class AppEnvironment: ObservableObject {
         let backend: SyncBackend? = backendConfig.current.map {
             HTTPSyncBackend(baseURL: $0.baseURL, token: $0.token)
         }
+
+        // Audio cache (stage 7): downloaded Ogg Opus files live in Caches (evictable by the OS).
+        let audioStore = (try? FileAudioStore(directory: Self.audioDirectory()))
+            ?? (try! FileAudioStore(directory: FileManager.default.temporaryDirectory
+                .appendingPathComponent("limitless-audio-\(UUID().uuidString)")))
+        self.audioStore = audioStore
+        self.audioService = AudioService(client: client, store: audioStore)
 
         do {
             let store = try GRDBLifelogStore(path: Self.databasePath())
@@ -60,5 +69,13 @@ final class AppEnvironment: ObservableObject {
         let dir = base.appendingPathComponent("limitless_arkgum", isDirectory: true)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("lifelogs.sqlite").path
+    }
+
+    private static func audioDirectory() -> URL {
+        let fm = FileManager.default
+        let base = (try? fm.url(
+            for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+        )) ?? fm.temporaryDirectory
+        return base.appendingPathComponent("limitless_arkgum/audio", isDirectory: true)
     }
 }

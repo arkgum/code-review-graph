@@ -121,7 +121,57 @@ public struct LimitlessClient: Sendable {
         }
     }
 
+    /// The maximum audio range the API accepts in a single `/download-audio` request.
+    public static let maxAudioRange: TimeInterval = 2 * 60 * 60
+
+    /// Downloads raw Pendant audio (Ogg Opus) for a time range.
+    ///
+    /// The range must be positive and no longer than ``maxAudioRange`` (2 hours); longer spans
+    /// must be fetched in chunks by the caller. Returns the binary Ogg Opus payload.
+    public func downloadAudio(start: Date, end: Date) async throws -> Data {
+        guard end > start else {
+            throw LimitlessAPIError.invalidParameter("audio end must be after start")
+        }
+        guard end.timeIntervalSince(start) <= Self.maxAudioRange else {
+            throw LimitlessAPIError.invalidParameter("audio range exceeds 2h limit")
+        }
+        let request = try makeGETRequest(
+            path: "download-audio",
+            queryItems: [
+                URLQueryItem(name: "start", value: Self.formatter.string(from: start)),
+                URLQueryItem(name: "end", value: Self.formatter.string(from: end))
+            ],
+            accept: "audio/ogg"
+        )
+        return try await performWithRetry(request)
+    }
+
     // MARK: - Request building
+
+    /// Shared builder: attaches the API key and Accept header, and appends query items.
+    private func makeGETRequest(
+        path: String,
+        queryItems: [URLQueryItem],
+        accept: String = "application/json"
+    ) throws -> URLRequest {
+        guard let key = keyProvider.currentAPIKey(), !key.isEmpty else {
+            throw LimitlessAPIError.missingAPIKey
+        }
+        guard var components = URLComponents(
+            url: baseURL.appendingPathComponent(path),
+            resolvingAgainstBaseURL: false
+        ) else {
+            throw LimitlessAPIError.invalidURL
+        }
+        if !queryItems.isEmpty { components.queryItems = queryItems }
+        guard let url = components.url else { throw LimitlessAPIError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(key, forHTTPHeaderField: "X-API-KEY")
+        request.setValue(accept, forHTTPHeaderField: "Accept")
+        return request
+    }
 
     private func makeRequest(path: String, query: LifelogQuery) throws -> URLRequest {
         guard let key = keyProvider.currentAPIKey(), !key.isEmpty else {

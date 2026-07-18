@@ -4,11 +4,20 @@ import LimitlessKit
 /// Detail screen: header metadata plus the structured transcript with speaker attribution.
 struct LifelogDetailView: View {
     let log: Lifelog
+    @StateObject private var audio: AudioDownloadModel
+
+    /// `service` is injected by the list's navigation destination (where the environment is
+    /// available), so the audio model can be built for `@StateObject` at init time.
+    init(log: Lifelog, service: AudioService) {
+        self.log = log
+        _audio = StateObject(wrappedValue: AudioDownloadModel(lifelog: log, service: service))
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
+                audioSection
                 Divider()
                 if !log.contents.isEmpty {
                     TranscriptView(nodes: log.contents)
@@ -25,6 +34,47 @@ struct LifelogDetailView: View {
         }
         .navigationTitle(log.title.isEmpty ? "Lifelog" : log.title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private var audioSection: some View {
+        switch audio.state {
+        case .idle:
+            if audio.canDownload {
+                Button {
+                    Task { await audio.download() }
+                } label: {
+                    Label("Download audio", systemImage: "arrow.down.circle")
+                }
+                .buttonStyle(.bordered)
+            }
+        case .downloading:
+            HStack(spacing: 8) {
+                ProgressView()
+                Text("Downloading audio…").foregroundStyle(.secondary)
+            }
+        case .ready(let url):
+            HStack(spacing: 12) {
+                ShareLink(item: url) {
+                    Label("Export audio (.ogg)", systemImage: "square.and.arrow.up")
+                }
+                Button(role: .destructive) {
+                    audio.delete()
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .accessibilityLabel("Delete audio")
+            }
+            .font(.callout)
+        case .failed(let message):
+            VStack(alignment: .leading, spacing: 4) {
+                Label("Audio download failed", systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                Text(message).font(.caption).foregroundStyle(.secondary)
+                Button("Retry") { Task { await audio.download() } }
+                    .buttonStyle(.bordered)
+            }
+        }
     }
 
     private var header: some View {

@@ -14,6 +14,8 @@ public enum LimitlessAPIError: Error, Equatable, Sendable {
     case decoding(String)
     /// The URL could not be constructed from the provided components.
     case invalidURL
+    /// A caller-supplied parameter was invalid (e.g. an audio range exceeding the API limit).
+    case invalidParameter(String)
     /// A transport-level failure (offline, timeout, TLS, …). Message only, to stay `Equatable`.
     case transport(String)
 }
@@ -36,6 +38,8 @@ extension LimitlessAPIError: LocalizedError {
             return "Failed to decode Limitless response: \(detail)"
         case .invalidURL:
             return "Failed to build a valid Limitless API URL."
+        case .invalidParameter(let detail):
+            return "Invalid request parameter: \(detail)"
         case .transport(let detail):
             return "Network error talking to Limitless: \(detail)"
         }

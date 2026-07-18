@@ -70,7 +70,7 @@ struct LifelogListView: View {
         .listStyle(.plain)
         .refreshable { await model.sync() }
         .navigationDestination(for: Lifelog.self) { log in
-            LifelogDetailView(log: log)
+            LifelogDetailView(log: log, service: env.audioService)
         }
         .overlay(alignment: .top) {
             if model.isSyncing {

@@ -25,7 +25,8 @@ limitless_arkgum/
     │   ├── Models/             Lifelog, ContentNode, LifelogsResponse
     │   ├── Networking/         LimitlessClient, LimitlessAPIError, APIKeyProvider
     │   ├── Storage/            LifelogStore, GRDBLifelogStore, SyncState
-    │   └── Sync/               SyncManager, SyncBackend
+    │   ├── Sync/               SyncManager, SyncBackend, HTTPSyncBackend
+    │   └── Audio/              AudioStore, FileAudioStore, AudioService
     └── Tests/LimitlessKitTests/
 
 LimitlessApp/                   iOS-приложение (SwiftUI) — собирается в Xcode
@@ -65,7 +66,10 @@ backend/                        Spring Boot приёмник (Maven, Java 17)
 - [x] Этап 5 — Keychain для API-ключа (`KeychainAPIKeyProvider`).
 - [x] Этап 6 — Spring Boot приёмник (`backend/`) + клиент `HTTPSyncBackend`, настройки бэкенда
       в приложении, outbox уходит на сервер (bulk-upsert по `id`, токен в `X-Sync-Token`).
-- [ ] Этап 7 — (опц.) аудио.
+- [x] Этап 7 — аудио: `downloadAudio` (≤2ч), `FileAudioStore`, `AudioService`; в приложении —
+      загрузка + экспорт `.ogg` (`ShareLink`) + очистка кэша.
+      ⚠️ iOS не играет Ogg Opus нативно — встроенный плеер это follow-up (Opus-декодер или
+      серверная транскодировка). См. `PLAN.md`.
 
 ## Сборка
 
